@@ -43,7 +43,7 @@ object PersonAccountsAnalysis {
     SparkSession
       .builder()
       .appName("Person Accounts Analysis")
-      .config("spark.master", "local")
+      .config("spark.master", "local[*]")
       .getOrCreate()
 
 
@@ -56,22 +56,26 @@ object PersonAccountsAnalysis {
     println("account - start")
     val accountRawPairRdd = toAccountRawPairRdd(accountRdd).persist()
     val accountPairRdd = toAccountPairRdd(accountRdd).persist()
-    accountRawPairRdd.foreach(println(_))
-    accountPairRdd.foreach(println(_))
+    println("accountRawPairRdd")
+    accountRawPairRdd.collect().foreach(println(_))
+    println("accountPairRdd")
+    accountPairRdd.collect().foreach(println(_))
     println("account - end")
 
     println("person - start")
     val personRawPairRdd = toPersonRawPairRdd(personRdd).persist()
     val personPairRdd = toPersonPairRdd(personRdd).persist()
-    personRawPairRdd.foreach(println(_))
-    personPairRdd.foreach(println(_))
+    println("personRawPairRdd")
+    personRawPairRdd.collect().foreach(println(_))
+    println("personPairRdd")
+    personPairRdd.collect().foreach(println(_))
     println("person - end")
 
     println("personAccount - start")
     val personAccountRawPairRdd = personRawPairRdd.join(accountRawPairRdd)
     val personAccountPairRdd = personPairRdd.join(accountPairRdd)
-    personAccountRawPairRdd.foreach(println(_))
-    personAccountPairRdd.foreach(println(_))
+    personAccountRawPairRdd.collect().foreach(println(_))
+    personAccountPairRdd.collect().foreach(println(_))
     println("personAccount - end")
 
     // large savings, earnings above > 50,000
@@ -89,7 +93,7 @@ object PersonAccountsAnalysis {
       .filter(hasNotAccountType(AccountType.BROKER))
 
     println("These people might want a broker")
-    brokerAccountCandidates.foreach(println(_))
+    brokerAccountCandidates.collect().foreach(println(_))
 
     val creditAssitanceCandidates = personAccountPairRdd
       .filter(earningsAtMost(40000))
@@ -98,8 +102,32 @@ object PersonAccountsAnalysis {
       .filter(balanceAtMost(-10000)(AccountType.CREDIT))
 
     println("These people might need some credit assistance")
-    creditAssitanceCandidates.foreach(println(_))
+    creditAssitanceCandidates.collect().foreach(println(_))
 
+    val chars = generateChars(100000)
+    val charRdd = spark.sparkContext.parallelize(chars)
+    val totalChars = charRdd.count()
+    println(s"Totalchars: ${totalChars}")
+    val totalChars2 = charRdd.map(c=> 1).sum()
+    println(s"Totalchars: ${totalChars2.toInt}")
+
+    val charDistributionRdd = charRdd.map(c => (c,1)).groupByKey
+    charDistributionRdd.collect().foreach(println)
+
+    val charDistributionTotalRdd = charRdd.map(c => (c,1)).reduceByKey((i, j) => i + j)
+    charDistributionTotalRdd.collect().foreach(println)
+
+//    val cdUnion = charDistributionRdd.union(charDistributionTotalRdd)
+
+  }
+
+
+
+  def generateChars(total: Int): Seq[Char] = {
+    val min = 32
+    val max = 126
+    val range = max - min
+    (0 until total).map(i => (Random.nextInt(range) + min).toChar)
   }
 
 
@@ -224,7 +252,7 @@ object PersonAccountsAnalysis {
     // a(1) = personName
     // a(2) = personAge
     // a(3) = personEarnings
-    a.map(_.split(",")).map(a => (a(0), (a(1), a(2).toInt, a(3).toInt)))
+    a.map(_.split(",")).map(a => (a(0).trim(), (a(1).trim(), a(2).toInt, a(3).toInt)))
   }
 
   case class Person(id: String, name: String, age: Int, earnings: Int) {
@@ -232,7 +260,7 @@ object PersonAccountsAnalysis {
   }
 
   def toPerson(a: Array[String]): Person =
-    Person(a(0), a(1), a(2).toInt, a(3).toInt)
+    Person(a(0).trim(), a(1).trim(), a(2).toInt, a(3).toInt)
 
 
   def toPersonPairRdd(a: RDD[String]): RDD[(String, Person)] =
