@@ -21,6 +21,7 @@ object Trial {
             StructField("amount", IntegerType, false) ::
             Nil)
             */
+
     var schema = new StructType()
     schema = schema.add(StructField("place", IntegerType, false))
     schema = schema.add(StructField("placename", StringType, false))

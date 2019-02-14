@@ -3,7 +3,7 @@ package accounts
 import java.nio.file.Paths
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.Random
 
@@ -39,19 +39,23 @@ object PersonAccountsAnalysis {
 
   import AccountType._
 
-  val spark: SparkSession =
-    SparkSession
-      .builder()
-      .appName("Person Accounts Analysis")
-      .config("spark.master", "local[*]")
-      .getOrCreate()
-
+  /*  val sparkSession: SparkSession =
+      SparkSession
+        .builder()
+        .appName("Person Accounts Analysis")
+        .config("spark.master", "local[*]")
+        .getOrCreate()
+  */
+  val sparkConf: SparkConf = new SparkConf().setAppName("Person Accounts Analysis").setMaster("local[*]")
+  val sparkContext: SparkContext = SparkContext.getOrCreate(sparkConf)
 
   /** Main function */
   def main(args: Array[String]): Unit = {
 
-    val accountRdd = spark.sparkContext.textFile(fsPath("/accounts/account.csv"))
-    val personRdd = spark.sparkContext.textFile(fsPath("/accounts/person.csv"))
+//    val accountRdd = sparkSession.sparkContext.textFile(fsPath("/accounts/account.csv"))
+//    val personRdd = sparkSession.sparkContext.textFile(fsPath("/accounts/person.csv"))
+    val accountRdd = sparkContext.textFile(fsPath("/accounts/account.csv"))
+    val personRdd = sparkContext.textFile(fsPath("/accounts/person.csv"))
 
     println("account - start")
     val accountRawPairRdd = toAccountRawPairRdd(accountRdd).persist()
@@ -105,22 +109,21 @@ object PersonAccountsAnalysis {
     creditAssitanceCandidates.collect().foreach(println(_))
 
     val chars = generateChars(100000)
-    val charRdd = spark.sparkContext.parallelize(chars)
+    val charRdd = sparkContext.parallelize(chars)
     val totalChars = charRdd.count()
     println(s"Totalchars: ${totalChars}")
-    val totalChars2 = charRdd.map(c=> 1).sum()
+    val totalChars2 = charRdd.map(c => 1).sum()
     println(s"Totalchars: ${totalChars2.toInt}")
 
-    val charDistributionRdd = charRdd.map(c => (c,1)).groupByKey
+    val charDistributionRdd = charRdd.map(c => (c, 1)).groupByKey
     charDistributionRdd.collect().foreach(println)
 
-    val charDistributionTotalRdd = charRdd.map(c => (c,1)).reduceByKey((i, j) => i + j)
+    val charDistributionTotalRdd = charRdd.map(c => (c, 1)).reduceByKey((i, j) => i + j)
     charDistributionTotalRdd.collect().foreach(println)
 
-//    val cdUnion = charDistributionRdd.union(charDistributionTotalRdd)
+    //    val cdUnion = charDistributionRdd.union(charDistributionTotalRdd)
 
   }
-
 
 
   def generateChars(total: Int): Seq[Char] = {

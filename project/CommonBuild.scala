@@ -32,7 +32,7 @@ case class Assignment(packageName: String,
   assert(!(styleScoreRatio == 0.0d ^ styleSheet == ""), "Style sheet and style ratio should be defined in pair.")
 }
 
-
+/*
 trait CommonBuild extends Build {
 
   val course = SettingKey[String]("course")
@@ -47,3 +47,4 @@ trait CommonBuild extends Build {
 
   lazy val scalaTestDependency = "org.scalatest" %% "scalatest" % "2.2.4"
 }
+*/

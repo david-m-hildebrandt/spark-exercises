@@ -14,6 +14,7 @@ case class MapMapString (val map: Map[String, Map[String, String]])
 /**
   * Note: keep this class concrete (i.e., do not convert it to abstract class or trait).
   */
+/*
 class StudentBuildLike protected() extends CommonBuild {
 
   lazy val root = project.in(file(".")).settings(
@@ -257,3 +258,4 @@ class StudentBuildLike protected() extends CommonBuild {
   }
 
 }
+*/

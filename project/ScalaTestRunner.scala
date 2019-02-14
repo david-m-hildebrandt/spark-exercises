@@ -3,11 +3,11 @@ import Keys._
 import sys.process.{Process => SysProc, ProcessLogger}
 import java.util.concurrent._
 import collection.mutable.ListBuffer
-import scala.pickling.Defaults._
-import scala.pickling.json._
+//import scala.pickling.Defaults._
+//import scala.pickling.json._
 
 final case class GradingSummary(score: Int, maxScore: Int, feedback: String)
-
+/*
 object ScalaTestRunner {
 
   class LimitedStringBuffer {
@@ -219,4 +219,4 @@ object ScalaTestRunner {
     }
   }
 }
-
+*/
